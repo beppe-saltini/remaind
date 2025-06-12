@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  frontend:
+    build: ./frontend
+    ports: 
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+    depends_on:
+      - api-gateway
+    
+  api-gateway:
+    build: ./backend
+    ports: 
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - RDF_ENDPOINT=http://fuseki:3030
+      - LLM_ENDPOINT=http://llm-service:11434
+      - RDF_STORE_TYPE=fuseki
+    depends_on:
+      - fuseki
+      - llm-service
+    
+  llm-service:
+    image: ollama/ollama
+    ports: 
+      - "11434:11434"
+    volumes: 
+      - ollama-data:/root/.ollama
+    
+  fuseki:
+    image: stain/jena-fuseki
+    ports: 
+      - "3030:3030"
+    volumes: 
+      - fuseki-data:/fuseki
+    environment:
+      - ADMIN_PASSWORD=admin123
+      
+  document-processor:
+    build: ./services/document-processor
+    environment:
+      - LLM_ENDPOINT=http://llm-service:11434
+    depends_on:
+      - llm-service
+
+volumes:
+  fuseki-data:
+  ollama-data:
