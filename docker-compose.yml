@@ -1,4 +1,3 @@
-cat > docker-compose.yml << 'EOF'
 services:
   frontend:
     build: ./frontend
