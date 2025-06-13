@@ -1,4 +1,4 @@
-version: '3.8'
+cat > docker-compose.yml << 'EOF'
 services:
   frontend:
     build: ./frontend
@@ -48,3 +48,4 @@ services:
 volumes:
   fuseki-data:
   ollama-data:
+EOF
