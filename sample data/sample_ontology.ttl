@@ -1,0 +1,368 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix pd: <http://personaldata.org/ontology#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ex: <http://example.com/data#> .
+
+# ========== PERSON SHAPE ==========
+
+pd:PersonShape a sh:NodeShape ;
+    sh:targetClass foaf:Person ;
+    rdfs:label "Person Shape" ;
+    rdfs:comment "Defines constraints for Person instances" ;
+    
+    # Name is required
+    sh:property [
+        sh:path foaf:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:minLength 1 ;
+        sh:maxLength 100 ;
+        sh:message "Person must have exactly one name between 1-100 characters" ;
+    ] ;
+    
+    # Birthday constraints
+    sh:property [
+        sh:path pd:birthday ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+        sh:lessThan [
+            sh:path pd:currentDate ;
+            sh:value "2025-06-13"^^xsd:date ;
+        ] ;
+        sh:message "Birthday must be a valid date in the past" ;
+    ] ;
+    
+    # Gender constraints
+    sh:property [
+        sh:path pd:gender ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:in ( "M" "F" "Male" "Female" "Other" ) ;
+        sh:message "Gender must be M, F, Male, Female, or Other" ;
+    ] ;
+    
+    # Relationship type constraints
+    sh:property [
+        sh:path pd:relationshipType ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:in ( "family" "friend" "colleague" "partner" "acquaintance" "other" ) ;
+        sh:message "Relationship type must be one of: family, friend, colleague, partner, acquaintance, other" ;
+    ] ;
+    
+    # Family role constraints
+    sh:property [
+        sh:path pd:familyRole ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:in ( "father" "mother" "son" "daughter" "child" "parent" "spouse" "sibling" ) ;
+        sh:message "Family role must be one of: father, mother, son, daughter, child, parent, spouse, sibling" ;
+    ] ;
+    
+    # Email validation
+    sh:property [
+        sh:path foaf:mbox ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:pattern "^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,}$" ;
+        sh:message "Email must be a valid email address format" ;
+    ] ;
+    
+    # Age constraints (if provided)
+    sh:property [
+        sh:path pd:age ;
+        sh:datatype xsd:integer ;
+        sh:maxCount 1 ;
+        sh:minInclusive 0 ;
+        sh:maxInclusive 150 ;
+        sh:message "Age must be between 0 and 150" ;
+    ] .
+
+# ========== FAMILY MEMBER SHAPE ==========
+
+pd:FamilyMemberShape a sh:NodeShape ;
+    sh:targetNode ex:giuseppe, ex:simona, ex:marta, ex:emma ;
+    rdfs:label "Family Member Shape" ;
+    rdfs:comment "Specific constraints for family members" ;
+    
+    # All family members must have family relationship
+    sh:property [
+        sh:path pd:relationshipType ;
+        sh:hasValue "family" ;
+        sh:minCount 1 ;
+        sh:message "Family members must have relationshipType set to 'family'" ;
+    ] ;
+    
+    # Family members must have a family role
+    sh:property [
+        sh:path pd:familyRole ;
+        sh:minCount 1 ;
+        sh:message "Family members must have a defined family role" ;
+    ] ;
+    
+    # Family members should have birthdays
+    sh:property [
+        sh:path pd:birthday ;
+        sh:minCount 1 ;
+        sh:message "Family members should have a birthday defined" ;
+    ] .
+
+# ========== PARENT SHAPE ==========
+
+pd:ParentShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this pd:familyRole ?role .
+                FILTER(?role IN ("father", "mother", "parent"))
+            }
+        """ ;
+    ] ;
+    rdfs:label "Parent Shape" ;
+    
+    # Parents must be older than children
+    sh:property [
+        sh:path pd:birthday ;
+        sh:sparql [
+            sh:message "Parents must be born before their children" ;
+            sh:prefixes ex:, pd:, foaf:, xsd: ;
+            sh:select """
+                SELECT $this WHERE {
+                    $this pd:parent ?child .
+                    $this pd:birthday ?parentBirthday .
+                    ?child pd:birthday ?childBirthday .
+                    FILTER(?parentBirthday >= ?childBirthday)
+                }
+            """ ;
+        ] ;
+    ] ;
+    
+    # Parents should have children
+    sh:property [
+        sh:path pd:parent ;
+        sh:minCount 0 ;
+        sh:node pd:PersonShape ;
+        sh:message "Parent relationship must point to valid Person" ;
+    ] .
+
+# ========== CHILD SHAPE ==========
+
+pd:ChildShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this pd:familyRole ?role .
+                FILTER(?role IN ("son", "daughter", "child"))
+            }
+        """ ;
+    ] ;
+    rdfs:label "Child Shape" ;
+    
+    # Children must be younger than parents
+    sh:property [
+        sh:path pd:birthday ;
+        sh:sparql [
+            sh:message "Children must be born after their parents" ;
+            sh:prefixes ex:, pd:, foaf:, xsd: ;
+            sh:select """
+                SELECT $this WHERE {
+                    ?parent pd:parent $this .
+                    ?parent pd:birthday ?parentBirthday .
+                    $this pd:birthday ?childBirthday .
+                    FILTER(?childBirthday <= ?parentBirthday)
+                }
+            """ ;
+        ] ;
+    ] .
+
+# ========== SPOUSE SHAPE ==========
+
+pd:SpouseShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this pd:spouse ?spouse .
+            }
+        """ ;
+    ] ;
+    rdfs:label "Spouse Shape" ;
+    
+    # Spouse relationship must be symmetric
+    sh:property [
+        sh:path pd:spouse ;
+        sh:sparql [
+            sh:message "Spouse relationship must be symmetric" ;
+            sh:prefixes ex:, pd: ;
+            sh:select """
+                SELECT $this WHERE {
+                    $this pd:spouse ?spouse .
+                    FILTER NOT EXISTS { ?spouse pd:spouse $this }
+                }
+            """ ;
+        ] ;
+    ] .
+
+# ========== SIBLING SHAPE ==========
+
+pd:SiblingShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this pd:sibling ?sibling .
+            }
+        """ ;
+    ] ;
+    rdfs:label "Sibling Shape" ;
+    
+    # Sibling relationship must be symmetric
+    sh:property [
+        sh:path pd:sibling ;
+        sh:sparql [
+            sh:message "Sibling relationship must be symmetric" ;
+            sh:prefixes ex:, pd: ;
+            sh:select """
+                SELECT $this WHERE {
+                    $this pd:sibling ?sibling .
+                    FILTER NOT EXISTS { ?sibling pd:sibling $this }
+                }
+            """ ;
+        ] ;
+    ] ;
+    
+    # Siblings cannot be spouses
+    sh:sparql [
+        sh:message "Siblings cannot be married to each other" ;
+        sh:prefixes ex:, pd: ;
+        sh:select """
+            SELECT $this WHERE {
+                $this pd:sibling ?sibling .
+                $this pd:spouse ?sibling .
+            }
+        """ ;
+    ] .
+
+# ========== FAMILY UNIT SHAPE ==========
+
+pd:FamilyShape a sh:NodeShape ;
+    sh:targetClass pd:Family ;
+    rdfs:label "Family Shape" ;
+    
+    # Family must have at least 2 members
+    sh:property [
+        sh:path pd:familyMember ;
+        sh:minCount 2 ;
+        sh:node pd:PersonShape ;
+        sh:message "Family must have at least 2 members" ;
+    ] ;
+    
+    # Family should have a name
+    sh:property [
+        sh:path foaf:name ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:message "Family should have a name" ;
+    ] .
+
+# ========== DATA QUALITY SHAPES ==========
+
+pd:DataQualityShape a sh:NodeShape ;
+    sh:targetClass foaf:Person ;
+    rdfs:label "Data Quality Shape" ;
+    
+    # Check for duplicate names in family
+    sh:sparql [
+        sh:message "Family members should not have identical names" ;
+        sh:prefixes ex:, pd:, foaf: ;
+        sh:select """
+            SELECT $this WHERE {
+                $this foaf:name ?name ;
+                      pd:relationshipType "family" .
+                ?other foaf:name ?name ;
+                       pd:relationshipType "family" .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] ;
+    
+    # Validate age consistency with birthday
+    sh:sparql [
+        sh:message "Age should be consistent with birthday" ;
+        sh:prefixes ex:, pd:, xsd: ;
+        sh:select """
+            SELECT $this WHERE {
+                $this pd:birthday ?birthday ;
+                      pd:age ?age .
+                BIND(YEAR(NOW()) - YEAR(?birthday) AS ?calculatedAge)
+                FILTER(ABS(?age - ?calculatedAge) > 1)
+            }
+        """ ;
+    ] .
+
+# ========== PROPERTY DEFINITIONS ==========
+
+# Custom properties used in constraints
+pd:birthday a rdf:Property ;
+    rdfs:label "birthday" ;
+    rdfs:comment "Date of birth" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:date .
+
+pd:gender a rdf:Property ;
+    rdfs:label "gender" ;
+    rdfs:comment "Gender identifier" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:string .
+
+pd:relationshipType a rdf:Property ;
+    rdfs:label "relationship type" ;
+    rdfs:comment "Type of relationship" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:string .
+
+pd:familyRole a rdf:Property ;
+    rdfs:label "family role" ;
+    rdfs:comment "Role within the family" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:string .
+
+pd:spouse a rdf:Property ;
+    rdfs:label "spouse" ;
+    rdfs:comment "Married partner" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range foaf:Person .
+
+pd:parent a rdf:Property ;
+    rdfs:label "parent" ;
+    rdfs:comment "Parent relationship" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range foaf:Person .
+
+pd:sibling a rdf:Property ;
+    rdfs:label "sibling" ;
+    rdfs:comment "Sibling relationship" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range foaf:Person .
+
+pd:familyMember a rdf:Property ;
+    rdfs:label "family member" ;
+    rdfs:comment "Member of a family unit" ;
+    rdfs:domain pd:Family ;
+    rdfs:range foaf:Person .
+
+pd:Family a rdfs:Class ;
+    rdfs:label "Family" ;
+    rdfs:comment "A family unit" .
+
+pd:age a rdf:Property ;
+    rdfs:label "age" ;
+    rdfs:comment "Current age in years" ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:integer .

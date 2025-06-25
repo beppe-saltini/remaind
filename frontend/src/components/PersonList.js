@@ -41,22 +41,29 @@ const PersonList = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [personsResponse, statsResponse] = await Promise.all([
-        personAPI.getAll(),
-        personAPI.getStats()
-      ]);
-      
-      setPersons(personsResponse.data);
-      setStats(statsResponse.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+const loadData = async () => {
+  try {
+    setLoading(true);
+    // Remove the stats call - only get persons data
+    const personsResponse = await personAPI.getAll();
+    
+    setPersons(personsResponse.data || personsResponse);
+    
+    // Calculate stats from the persons data
+    const personsData = personsResponse.data || personsResponse;
+    const calculatedStats = {
+      totalPersons: personsData.length,
+      friends: personsData.filter(p => p.relationship === 'friend').length,
+      family: personsData.filter(p => p.relationship === 'family' || p.familyRole).length,
+      colleagues: personsData.filter(p => p.relationship === 'colleague').length,
+    };
+    setStats(calculatedStats);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -128,14 +135,36 @@ const PersonList = () => {
           <Tab label={`Colleagues (${persons.filter(p => p.relationship === 'colleague').length})`} />
         </Tabs>
 
-        {/* Person Grid */}
-        <Grid container>
-          {filteredPersons.map((person) => (
-            <Grid item xs={12} sm={6} md={4} key={person.uri}>
-              <PersonCard person={person} />
-            </Grid>
-          ))}
-        </Grid>
+{/* Person Grid - SIMPLE TEST WITH PROPER KEYS */}
+<Grid container>
+  {filteredPersons.map((person, index) => {
+    const uniqueKey = person.uri || person.id || `${person.name}-${index}`;
+    return (
+      <Grid item xs={12} sm={6} md={4} key={uniqueKey}>
+        <div 
+          onClick={() => {
+            console.log('=== CLICKED TEST ===');
+            console.log('Person name:', person.name);
+            console.log('Person object:', person);
+            alert(`Clicked ${person.name}!`);
+          }}
+          style={{ 
+            border: '3px solid red', 
+            padding: '20px', 
+            cursor: 'pointer',
+            backgroundColor: 'yellow',
+            margin: '10px',
+            borderRadius: '8px'
+          }}
+        >
+          <h2 style={{ margin: '0 0 10px 0' }}>{person.name}</h2>
+          <p style={{ margin: '0' }}><strong>CLICK ME TO TEST!</strong></p>
+          <small>ID: {person.id || 'none'} | URI: {person.uri || 'none'}</small>
+        </div>
+      </Grid>
+    );
+  })}
+</Grid>
 
         {filteredPersons.length === 0 && (
           <Box textAlign="center" mt={4}>

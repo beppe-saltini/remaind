@@ -2,15 +2,21 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import PersonList from './components/PersonList';
-import DocumentUpload from './components/DocumentUpload';
-import Dashboard from './components/Dashboard';
+import HomePage from './components/HomePage';
+import ClassList from './components/ClassList';
+import PersonDetail from './components/PersonDetail';
 
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: { main: '#1976d2' },
     secondary: { main: '#dc004e' }
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: {
+    borderRadius: 12
   }
 });
 
@@ -20,9 +26,9 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/persons" element={<PersonList />} />
-          <Route path="/upload" element={<DocumentUpload />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/class/:className" element={<ClassList />} />
+          <Route path="/persons/:id" element={<PersonDetail />} />
         </Routes>
       </Router>
     </ThemeProvider>

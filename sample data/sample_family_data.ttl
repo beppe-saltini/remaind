@@ -1,0 +1,173 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix pd: <http://personaldata.org/ontology#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/data#> .
+
+# ========== FAMILY MEMBERS ==========
+
+# Giuseppe - Father
+ex:giuseppe a foaf:Person ;
+    foaf:name "Giuseppe" ;
+    foaf:givenName "Giuseppe" ;
+    foaf:familyName "Saltini" ;
+    foaf:mbox "giuseppe@saltini.family" ;
+    pd:birthday "1973-01-08"^^xsd:date ;
+    pd:age 52 ;
+    pd:gender "M" ;
+    pd:relationshipType "family" ;
+    pd:familyRole "father" ;
+    pd:nationality "Italian" ;
+    pd:phone "+39-123-456-7890" ;
+    pd:address "Via Roma 123, Milano, Italy" .
+
+# Simona - Mother
+ex:simona a foaf:Person ;
+    foaf:name "Simona" ;
+    foaf:givenName "Simona" ;
+    foaf:familyName "Saltini" ;
+    foaf:mbox "simona@saltini.family" ;
+    pd:birthday "1977-04-28"^^xsd:date ;
+    pd:age 48 ;
+    pd:gender "F" ;
+    pd:relationshipType "family" ;
+    pd:familyRole "mother" ;
+    pd:nationality "Italian" ;
+    pd:phone "+39-123-456-7891" ;
+    pd:address "Via Roma 123, Milano, Italy" .
+
+# Marta - Elder Daughter
+ex:marta a foaf:Person ;
+    foaf:name "Marta" ;
+    foaf:givenName "Marta" ;
+    foaf:familyName "Saltini" ;
+    foaf:mbox "marta@saltini.family" ;
+    pd:birthday "2006-09-13"^^xsd:date ;
+    pd:age 18 ;
+    pd:gender "F" ;
+    pd:relationshipType "family" ;
+    pd:familyRole "daughter" ;
+    pd:nationality "Italian" ;
+    pd:phone "+39-123-456-7892" ;
+    pd:address "Via Roma 123, Milano, Italy" .
+
+# Emma - Younger Daughter
+ex:emma a foaf:Person ;
+    foaf:name "Emma" ;
+    foaf:givenName "Emma" ;
+    foaf:familyName "Saltini" ;
+    foaf:mbox "emma@saltini.family" ;
+    pd:birthday "2010-08-05"^^xsd:date ;
+    pd:age 14 ;
+    pd:gender "F" ;
+    pd:relationshipType "family" ;
+    pd:familyRole "daughter" ;
+    pd:nationality "Italian" ;
+    pd:phone "+39-123-456-7893" ;
+    pd:address "Via Roma 123, Milano, Italy" .
+
+# ========== FAMILY RELATIONSHIPS ==========
+
+# Spouse relationships (symmetric)
+ex:giuseppe pd:spouse ex:simona .
+ex:simona pd:spouse ex:giuseppe .
+
+# Parent-child relationships
+ex:giuseppe pd:parent ex:marta .
+ex:giuseppe pd:parent ex:emma .
+ex:simona pd:parent ex:marta .
+ex:simona pd:parent ex:emma .
+
+# Child-parent relationships (inverse)
+ex:marta pd:child ex:giuseppe .
+ex:marta pd:child ex:simona .
+ex:emma pd:child ex:giuseppe .
+ex:emma pd:child ex:simona .
+
+# Sibling relationships (symmetric)
+ex:marta pd:sibling ex:emma .
+ex:emma pd:sibling ex:marta .
+
+# ========== FAMILY UNIT ==========
+
+ex:saltiniFamily a pd:Family ;
+    foaf:name "Saltini Family" ;
+    pd:familyName "Saltini" ;
+    pd:familyMember ex:giuseppe, ex:simona, ex:marta, ex:emma ;
+    pd:homeAddress "Via Roma 123, Milano, Italy" ;
+    pd:established "2005-01-01"^^xsd:date ;
+    foaf:homepage "https://saltini.family" .
+
+# ========== ADDITIONAL FAMILY DATA ==========
+
+# Emergency contacts
+ex:giuseppe pd:emergencyContact ex:simona .
+ex:simona pd:emergencyContact ex:giuseppe .
+ex:marta pd:emergencyContact ex:giuseppe .
+ex:emma pd:emergencyContact ex:simona .
+
+# Educational information
+ex:marta pd:education "University Student" ;
+         pd:school "Università Bocconi" ;
+         pd:studyField "Economics" .
+
+ex:emma pd:education "High School Student" ;
+        pd:school "Liceo Scientifico" ;
+        pd:grade "9th Grade" .
+
+# Professional information
+ex:giuseppe pd:occupation "Software Engineer" ;
+           pd:employer "Tech Company Milano" ;
+           pd:workEmail "giuseppe@techcompany.it" .
+
+ex:simona pd:occupation "Marketing Manager" ;
+         pd:employer "Marketing Agency Milano" ;
+         pd:workEmail "simona@marketing.it" .
+
+# Interests and hobbies
+ex:giuseppe pd:hobby "Programming", "Photography", "Cycling" .
+ex:simona pd:hobby "Reading", "Yoga", "Cooking" .
+ex:marta pd:hobby "Music", "Dancing", "Social Media" .
+ex:emma pd:hobby "Drawing", "Swimming", "Video Games" .
+
+# Important dates
+ex:giuseppe pd:importantDate [
+    pd:dateType "Wedding Anniversary" ;
+    pd:date "2005-06-15"^^xsd:date ;
+    pd:description "Marriage with Simona"
+] .
+
+ex:simona pd:importantDate [
+    pd:dateType "Wedding Anniversary" ;
+    pd:date "2004-05-15"^^xsd:date ;
+    pd:description "Marriage with Giuseppe"
+] .
+
+# Medical information (optional, privacy-sensitive)
+ex:giuseppe pd:bloodType "A+" ;
+           pd:allergies "None" .
+
+ex:simona pd:bloodType "O-" ;
+         pd:allergies "Peanuts" .
+
+ex:marta pd:bloodType "A+" ;
+        pd:allergies "None" .
+
+ex:emma pd:bloodType "O+" ;
+       pd:allergies "Shellfish" .
+
+# Documents references
+ex:giuseppe pd:hasDocument ex:giuseppePassport, ex:giuseppeDrivingLicense .
+ex:simona pd:hasDocument ex:simonaPassport, ex:simonaDrivingLicense .
+ex:marta pd:hasDocument ex:martaStudentID .
+ex:emma pd:hasDocument ex:emmaStudentID .
+
+# Document placeholders (would be linked to actual document data)
+ex:giuseppePassport a pd:Document ;
+    pd:documentType "Passport" ;
+    pd:documentNumber "IT1234567" ;
+    pd:expiryDate "2030-01-08"^^xsd:date .
+
+ex:giuseppeDrivingLicense a pd:Document ;
+    pd:documentType "Driving License" ;
+    pd:documentNumber "MI123456789" ;
+    pd:expiryDate "2028-01-08"^^xsd:date .

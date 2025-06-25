@@ -1,0 +1,68 @@
+@prefix pd: <http://personaldata.org/ontology#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix ex: <http://example.com/data#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Giuseppe - Father
+ex:giuseppe a pd:Person ;
+    foaf:name "Giuseppe" ;
+    foaf:givenName "Giuseppe" ;
+    pd:birthday "1973-01-08"^^xsd:date ;
+    pd:relationship "family" ;
+    pd:gender "M" ;
+    pd:familyRole "father" ;
+    rdfs:comment "Father of the family" .
+
+# Simona - Mother  
+ex:simona a pd:Person ;
+    foaf:name "Simona" ;
+    foaf:givenName "Simona" ;
+    pd:birthday "1977-04-28"^^xsd:date ;
+    pd:relationship "family" ;
+    pd:gender "F" ;
+    pd:familyRole "mother" ;
+    rdfs:comment "Mother of the family" .
+
+# Marta - Daughter
+ex:marta a pd:Person ;
+    foaf:name "Marta" ;
+    foaf:givenName "Marta" ;
+    pd:birthday "2006-09-13"^^xsd:date ;
+    pd:relationship "family" ;
+    pd:gender "F" ;
+    pd:familyRole "daughter" ;
+    rdfs:comment "Elder daughter" .
+
+# Emma - Daughter
+ex:emma a pd:Person ;
+    foaf:name "Emma" ;
+    foaf:givenName "Emma" ;
+    pd:birthday "2010-08-05"^^xsd:date ;
+    pd:relationship "family" ;
+    pd:gender "F" ;
+    pd:familyRole "daughter" ;
+    rdfs:comment "Younger daughter" .
+
+# Family relationships
+ex:giuseppe pd:spouse ex:simona .
+ex:simona pd:spouse ex:giuseppe .
+
+ex:giuseppe pd:parent ex:marta .
+ex:giuseppe pd:parent ex:emma .
+ex:simona pd:parent ex:marta .
+ex:simona pd:parent ex:emma .
+
+ex:marta pd:child ex:giuseppe .
+ex:marta pd:child ex:simona .
+ex:marta pd:sibling ex:emma .
+
+ex:emma pd:child ex:giuseppe .
+ex:emma pd:child ex:simona .
+ex:emma pd:sibling ex:marta .
+
+# Family unit
+ex:family a pd:Family ;
+    rdfs:label "Giuseppe's Family" ;
+    pd:familyMember ex:giuseppe, ex:simona, ex:marta, ex:emma ;
+    pd:familyName "Saltini" .

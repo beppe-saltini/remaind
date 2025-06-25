@@ -26,7 +26,7 @@ api.interceptors.response.use(
 
 export const personAPI = {
   getAll: () => api.get('/persons'),
-  getStats: () => api.get('/persons/stats'),
+  //getStats: () => api.get('/persons/stats'),
   getUpcomingBirthdays: (days = 30) => api.get(`/persons/birthdays?days=${days}`),
   getByRelationship: (relationship) => api.get(`/persons/relationship/${relationship}`),
   add: (personData) => api.post('/persons', personData),
